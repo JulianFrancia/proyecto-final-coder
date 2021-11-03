@@ -33,7 +33,7 @@ export const listarProductos = (req, res) => {
 export const actualizarProducto = (req, res) => {
     try {
         const { id } = req.params;
-        daoSelected.update('productos',{_id:id}, req.body)
+        daoSelected.update('productos',id, req.body)
         .then(producto => {
             return res.status(200).json(req.body)
         })
@@ -46,7 +46,7 @@ export const actualizarProducto = (req, res) => {
 export const borrarProducto = (req, res) => {
     try {
         const {id} = req.params;
-        daoSelected.delete('productos',{_id:id})
+        daoSelected.delete('productos',id)
         .then(producto => {
             return res.status(200).end();
         })

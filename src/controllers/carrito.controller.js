@@ -1,45 +1,38 @@
 import Carrito from "../models/Carrito.js";
 import { productos } from "./productos.controller.js";
-import fs from 'fs'
+import { daoSelected } from '../app.js';
+import fs, { read } from 'fs'
+import { response } from "express";
 
 const carrito = new Carrito([]);
 
 export const listarProductosCarrito = (req,res) => {
-    try {
-        const { id } = req.query;
-        return id ? res.status(200).json(carrito.find(elem => elem.id == id)) : res.status(200).json(carrito);
-    } catch (error) {
-     console.log(error)   
-    }
+        daoSelected.read('carrito')
+        .then(response => {
+            return res.status(200).json(response);
+        })
+        .catch(error => {
+            console.log(error)
+        });
 }
 
 export const agregarProductoCarrito = (req,res) => {
-    try {
-        const { id_producto} = req.params;
-        const producto = productos.find(elem => elem.id == id_producto);
-        if(!producto) {
-            return res.status(404).json({message: 'No se pudo agregar el producto porque no existe'});
-        } else {
-            carrito.productos.push(producto);
-            fs.writeFileSync('carrito.txt', JSON.stringify(carrito));
-            return res.status(201).json(producto);
-        }
-    } catch(error) {
+    daoSelected.read('productos',req.params.id_producto)
+    .then(producto => {
+        daoSelected.insert('carrito',producto);
+        return res.status(201).json(producto);
+    })
+    .catch((error) => {
         console.log(error)
-    }
+        return res.status(404).json({message: 'No se pudo agregar el producto porque no existe'});
+    })
 }
 
 export const borrarProductoCarrito = (req,res) => {
-    try {
-        const {id} = req.params;
-        let pos = carrito.productos.findIndex(elem => elem.id == id);
-        if(pos == -1) {
-            return res.status(404).json({message: 'Producto no encontrado.'})
-        } else {
-            carrito.productos.splice(pos,1);
-            res.status(200).end();
-        } 
-    } catch (error) {
-        console.log(error)
-    }
+    const {id} = req.params;
+    daoSelected.delete('carrito',id).then(response => {
+        return res.status(200).end();
+    }).catch(error => {
+        return res.status(404).json({message: 'Producto no encontrado.'})
+    });
 }
