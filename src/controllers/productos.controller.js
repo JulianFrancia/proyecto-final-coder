@@ -1,5 +1,6 @@
 import { Producto } from "../models/Productos.js";
-import fs from 'fs';
+import { atlasDAO } from "../app.js"
+import { PRODUCTOS_MODEL } from "../DAO/Atlas.js"
 
 export const productos = [];
 
@@ -7,8 +8,7 @@ export const agregarProducto = (req, res) => {
     try {
         const { nombre, descripcion, codigo, imagen, precio, stock } = req.body;
         const producto = new Producto(nombre, descripcion, codigo, imagen, precio, stock);
-        productos.push(producto);
-        fs.writeFileSync('productos.txt', JSON.stringify(productos));
+        atlasDAO.insert(PRODUCTOS_MODEL,req.body);
         return res.status(201).json(producto);
     } catch(error) {
         console.log(error)
