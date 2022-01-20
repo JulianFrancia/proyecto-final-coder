@@ -1,6 +1,4 @@
-import  mongoose  from 'mongoose'
-import  bcrypt  from "bcrypt";
-import passport from "passport-local";
+import  mongoose  from 'mongoose';
 import * as productos from './schemas/productosSchema.js'; 
 import * as carrito from './schemas/carritoSchema.js'; 
 import * as usuarios from './schemas/usuarioSchema.js';
@@ -97,30 +95,6 @@ export class AtlasDAO {
         .catch(error => {
             console.log(error)
         })
-    }
-
-    signUp() {
-        passport.use('signUp', new passport.Strategy({
-            passReqToCallback: true
-        }, (req, name, password, email, done) => {
-            models[usuarios].classModel.findOne({'name': name}, async (err, user) => {
-                if(err) {
-                    console.log(err)
-                    return done(err)
-                }
-                if(user) {
-                    return done(null, false, console.log('ya existe el usuario'))
-                } else {
-                    const userSaveModel = {name: name, password: this.createHash(password), email: email};
-                    await userSaveModel.save();
-                    return done(null,name);
-                }
-            })
-        }));
-    }
-    
-    createHash(password) {
-        return bcrypt.hashSync(password, bCrypt.genSaltSync(10), null)
     }
 
 }

@@ -1,4 +1,3 @@
-console.log('holaaa')
 function signUp() {
     const name = document.getElementById("registerName");
     const password = document.getElementById("registerPassword");
@@ -9,7 +8,7 @@ function signUp() {
         password: password.value,
         email: email.value
     }
-    fetch("http://localhost:8080/register/signUp", {
+    fetch("http://localhost:8080/register", {
         method: 'POST',
         headers: {
             'Content-type' : 'application/json'

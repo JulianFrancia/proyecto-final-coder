@@ -10,17 +10,29 @@
 <body>
     <div>
         <h1>Registro</h1>
-        <form>
+        <form action="/register" method="POST">
             <label for="registerName">Nombre</label>
-            <input id="registerName" type="text">
+            <input id="registerName" name="username" type="text">
 
             <label for="registerPassword">Contraseña</label>
-            <input id="registerPassword" type="text">
+            <input id="registerPassword" name="password" type="text">
 
-            <label for="registerEmail">Email</label>
-            <input id="registerEmail" type="email">
+            <label for="registerPassword">email</label>
+            <input id="registerPassword" name="email" type="text">
 
-            <input type="submit" value="Registrarse" onclick="signUp(); return false">
+            <label for="direccion">direccion</label>
+            <input id="direccion" name="direccion" type="text">
+
+            <label for="edad">edad</label>
+            <input id="edad" name="edad" type="text">
+
+            <label for="nro_telefono">nro_telefono</label>
+            <input id="nro_telefono" name="nro_telefono" type="text">
+
+            <label for="avatar">avatar</label>
+            <input id="avatar" name="avatar" type="text">
+
+            <input type="submit" value="Registrarse">
         </form>
     </div>
 </body>
