@@ -11,12 +11,15 @@ import { AtlasDAO, models } from './DAO/Atlas.js'
 import passport from 'passport';
 import  bcrypt  from "bcrypt";
 import passportLocal from "passport-local";
+import {createTransport} from 'nodemailer';
+import multer from 'multer';
 
 
 const __dirname = path.resolve();
 
 const app = Express();
 export const atlasDAO = new AtlasDAO;
+const upload = multer({dest:'uploads'})
 
 app.use(Express.json());
 app.use(Express.urlencoded({extended: true}));
@@ -35,6 +38,15 @@ app.use(passport.initialize());
 app.use(passport.session());
 app.use("/productos", productosRouter);
 app.use("/carrito", carritoRouter);
+
+const transporter = createTransport({
+    host: 'smtp.ethereal.email',
+    port: 587,
+    auth: {
+        user: 'rodger.williamson53@ethereal.email',
+        pass: 'aAF9GHjVVEGa335cES'
+    }
+})
 
 passport.use('signup', new passportLocal.Strategy({
     passReqToCallback: true
@@ -56,12 +68,28 @@ passport.use('signup', new passportLocal.Strategy({
                 nro_telefono: req.body.nro_telefono,
                 avatar: req.body.avatar})
             .save();
+            saveUser({username: username,
+                email: req.body.email,
+                direccion: req.body.direccion,
+                edad: req.body.edad,
+                nro_telefono: req.body.nro_telefono,
+                avatar: req.body.avatar});
             return done(null,username);
         }
     })
 }));
 
-
+async function saveUser(user) {
+        const mailOptions = {
+            from:'servidor Node',
+            to: user.email,
+            subject: 'Nuevo registro',
+            html:`<h4>Datos del registro: </h4>
+            <p>nombre:${user.username}, apellido:${user.apellido}, email:${user.email}</p>
+            `
+        };
+       await transporter.sendMail(mailOptions);
+}
 
 passport.use('login', new passportLocal.Strategy({
     passReqToCallback: true,
@@ -105,13 +133,14 @@ passport.deserializeUser((id, done)=>{
     })
 });
 
-app.post('/register', passport.authenticate('signup', {failureRedirect: '/failsignup'}), postSignUp);
+app.post('/register', upload.single('avatar'), passport.authenticate('signup', {failureRedirect: '/failsignup'}), postSignUp);
 app.get('/failsignup', getFailSignUp);
 app.post('/login', passport.authenticate('login', {failureRedirect: '/failLogin'}), postLogin);
-app.get('/failLogin', getFailLogin)
+app.get('/failLogin', getFailLogin);
+app.get('/logout', logout);
 
 function postSignUp(req,res) {
-    res.redirect('/index.html');
+    res.redirect('/home.html');
 }
 
 function getFailSignUp(req,res) {
@@ -127,6 +156,11 @@ function postLogin(req,res) {
 
 function getFailLogin(req,res) {
     res.send('fail login')
+}
+
+function logout(req, res) {
+    req.logout();
+    res.redirect('/login.html');
 }
 
 export default app;

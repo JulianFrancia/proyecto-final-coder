@@ -1,4 +1,3 @@
-import Carrito from "../models/Carrito.js";
 import { atlasDAO } from "../app.js";
 import { PRODUCTOS_MODEL, CARRITO_MODEL } from "../DAO/Atlas.js";
 
