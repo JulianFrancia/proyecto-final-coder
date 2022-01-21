@@ -2,6 +2,7 @@
 import Express from 'express';
 import session from 'express-session';
 import path from 'path';
+import  fs  from 'fs';
 /*Routes */
 import productosRouter from './routes/productos.route.js';
 import carritoRouter from './routes/carrito.route.js';
@@ -13,6 +14,9 @@ import  bcrypt  from "bcrypt";
 import passportLocal from "passport-local";
 import {createTransport} from 'nodemailer';
 import multer from 'multer';
+import twilio from 'twilio';
+import Log4js from 'log4js';
+import  'dotenv/config';
 
 
 const __dirname = path.resolve();
@@ -43,21 +47,45 @@ const transporter = createTransport({
     host: 'smtp.ethereal.email',
     port: 587,
     auth: {
-        user: 'rodger.williamson53@ethereal.email',
-        pass: 'aAF9GHjVVEGa335cES'
+        user: process.env.USER_NODEMAILER,
+        pass: process.env.PASS_NODEMAILER
     }
-})
+});
+
+const accountSid = process.env.ACCOUNT_SID;
+const authToken = process.env.AUTH_TOKEN;
+
+const client = twilio(accountSid, authToken);
+
+Log4js.configure({
+    appenders: {
+      miLoggerConsole: { type: "console" },
+      miLoggerFile: { type: 'file', filename: 'info.log' },
+      miLoggerFile2: { type: 'file', filename: 'info2.log' }
+    },
+    categories: {
+      default: { appenders: ["miLoggerConsole"], level: "trace" },
+      consola: { appenders: ["miLoggerConsole"], level: "debug" },
+      archivo: { appenders: ["miLoggerFile"], level: "warn" },
+      archivo2: { appenders: ["miLoggerFile2"], level: "info" },
+      todos: { appenders: ["miLoggerConsole", "miLoggerFile"], level: "error" }
+    }
+   })
+   
+
+   const logger = Log4js.getLogger();
+ 
 
 passport.use('signup', new passportLocal.Strategy({
     passReqToCallback: true
 }, function (req, username, password, done) {
     models.usuarios.classModel.findOne({'username': username}, async (err, user) => {
         if(err) {
-            console.log(err)
+            logger.error(err)
             return done(err)
         }
         if(user) {
-            return done(null, false, console.log('ya existe el usuario'))
+            return done(null, false, logger.info('ya existe el usuario'))
         } else {
             await models.usuarios.constructor(
                 {username: username,
@@ -66,20 +94,19 @@ passport.use('signup', new passportLocal.Strategy({
                 direccion: req.body.direccion,
                 edad: req.body.edad,
                 nro_telefono: req.body.nro_telefono,
-                avatar: req.body.avatar})
+                avatar: req.file.originalname})
             .save();
             saveUser({username: username,
                 email: req.body.email,
-                direccion: req.body.direccion,
                 edad: req.body.edad,
-                nro_telefono: req.body.nro_telefono,
-                avatar: req.body.avatar});
+                telefono: req.body.nro_telefono});
             return done(null,username);
         }
     })
 }));
 
 async function saveUser(user) {
+       try {
         const mailOptions = {
             from:'servidor Node',
             to: user.email,
@@ -89,6 +116,14 @@ async function saveUser(user) {
             `
         };
        await transporter.sendMail(mailOptions);
+        const message = await client.messages.create({
+           body: 'Hola soy un SMS desde Node.js!',
+           from: process.env.TWILIO_NUMBER,
+           to: `+54${user.telefono}`
+        })
+     } catch (error) {
+        logger.error(err)
+     }
 }
 
 passport.use('login', new passportLocal.Strategy({
@@ -97,7 +132,7 @@ passport.use('login', new passportLocal.Strategy({
     function(req, username, password, done) {
         models.usuarios.classModel.findOne({'email': username}, (err, user) => {
             if(err) {
-                console.log(err)
+                logger.error(err)
                 return done(err)
             }
             if(!user) {
@@ -106,7 +141,7 @@ passport.use('login', new passportLocal.Strategy({
             if(validPassword(password, user.password)) {
                 return done(null, user.username)
             } else {
-                return done(null, false, console.log('contrasenia erronea'))
+                return done(null, false, logger.error('contrasenia erronea'))
             }
         })
     }
@@ -138,13 +173,13 @@ app.get('/failsignup', getFailSignUp);
 app.post('/login', passport.authenticate('login', {failureRedirect: '/failLogin'}), postLogin);
 app.get('/failLogin', getFailLogin);
 app.get('/logout', logout);
+app.get('/images/:image?', returnImage)
 
 function postSignUp(req,res) {
     res.redirect('/home.html');
 }
 
 function getFailSignUp(req,res) {
-    console.log('fallo')
     res.send('fail register')
 }
 
@@ -161,6 +196,14 @@ function getFailLogin(req,res) {
 function logout(req, res) {
     req.logout();
     res.redirect('/login.html');
+}
+
+
+function returnImage(req, res) {
+    const { image } = req.query
+    const img = fs.readFileSync(`${__dirname}/uploads/${image}`);
+    res.writeHead(200, {'Content-Type': 'image/gif' });
+    res.end(img, 'binary');
 }
 
 export default app;

@@ -30,7 +30,8 @@ export class AtlasDAO {
     }
 
     connectDB() {
-        const uri = "mongodb+srv://admin:admin@cluster0.bq275.mongodb.net/myFirstDatabase?retryWrites=true&w=majority";
+
+        const uri = `mongodb+srv://admin:${process.env.PASS_DB}@cluster0.bq275.mongodb.net/myFirstDatabase?retryWrites=true&w=majority`;
         mongoose.connect(uri, { 
             useNewUrlParser: true,
             useUnifiedTopology: true
