@@ -81,14 +81,14 @@ export class AtlasDAO {
     }
 
     deleteProductCarrito(id) {
-        this.read(CARRITO_MODEL)
+        return this.read(CARRITO_MODEL)
         .then(response => {
             if(response.length > 0) {
-                let codigo = response[0].productos.find(elem => elem._id == id).codigo;
+                let idProducto = response[0].productos.find(elem => elem._id == id)._id;
                 const newModel = models[CARRITO_MODEL].classModel;
                 return newModel.updateOne(
                     {_id:response[0]._id},
-                    { $pull: { productos: {codigo: codigo} } }
+                    { $pull: { productos: {_id: idProducto} } }
                 )
             }
         })
