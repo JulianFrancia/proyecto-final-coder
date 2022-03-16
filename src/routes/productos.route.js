@@ -7,7 +7,7 @@ const __dirname = path.resolve();
 
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {
-      cb(null, `${__dirname}/storage/imgs`)
+      cb(null, `https://proyecto-final-coder-back.herokuapp.com/storage/imgs`)
     },
     filename: function (req, file, cb) {
       cb(null, file.originalname)
