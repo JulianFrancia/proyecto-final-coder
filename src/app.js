@@ -6,6 +6,7 @@ import  fs  from 'fs';
 /*Routes */
 import productosRouter from './routes/productos.route.js';
 import carritoRouter from './routes/carrito.route.js';
+import ordenesRouter from './routes/ordenes.route.js';
 /*Otros */
 import { AtlasDAO, models } from './DAO/Atlas.js'
 /*Dependencias */
@@ -17,17 +18,27 @@ import multer from 'multer';
 import twilio from 'twilio';
 import Log4js from 'log4js';
 import  'dotenv/config';
+import cors from 'cors';
+import { Server } from 'socket.io';
+import { createServer } from 'http';
 
 
 const __dirname = path.resolve();
 
 const app = Express();
 export const atlasDAO = new AtlasDAO;
-const upload = multer({dest:'uploads'})
+const upload = multer({dest:'storage/imgs'})
 
 app.use(Express.json());
 app.use(Express.urlencoded({extended: true}));
-app.use(Express.static(`${__dirname}/src/public`));
+app.use('/public',Express.static(`${__dirname}/storage/imgs`));
+app.use(cors());
+const httpServer = createServer(app);
+const io = new Server(httpServer, {cors: {origin: '*'}});
+
+io.on('connection', (socket) => {
+    socket.emit('mensaje')
+})
 
 app.use(session({
     secret:'secret',
@@ -41,7 +52,8 @@ app.use(session({
 app.use(passport.initialize());
 app.use(passport.session());
 app.use("/productos", productosRouter);
-app.use("/carrito", carritoRouter);
+app.use("/carrito/:userId", carritoRouter);
+app.use("/orden", ordenesRouter);
 
 const transporter = createTransport({
     host: 'smtp.ethereal.email',
@@ -93,13 +105,14 @@ passport.use('signup', new passportLocal.Strategy({
                 email: req.body.email,
                 direccion: req.body.direccion,
                 edad: req.body.edad,
-                nro_telefono: req.body.nro_telefono,
-                avatar: req.file.originalname})
+                nroTelefono: req.body.nroTelefono,
+                avatar: req.body.avatar,
+                carrito: []})
             .save();
             saveUser({username: username,
                 email: req.body.email,
                 edad: req.body.edad,
-                telefono: req.body.nro_telefono});
+                telefono: req.body.nroTelefono});
             return done(null,username);
         }
     })
@@ -116,13 +129,13 @@ async function saveUser(user) {
             `
         };
        await transporter.sendMail(mailOptions);
-        const message = await client.messages.create({
+        await client.messages.create({
            body: 'Hola soy un SMS desde Node.js!',
            from: process.env.TWILIO_NUMBER,
            to: `+54${user.telefono}`
-        })
+        }).then(call => console.log(call.sid))
      } catch (error) {
-        logger.error(err)
+        logger.error(`ERROR: ${error}`)
      }
 }
 
@@ -176,7 +189,7 @@ app.get('/logout', logout);
 app.get('/images/:image?', returnImage)
 
 function postSignUp(req,res) {
-    res.redirect('/home.html');
+    res.status(200).json({msg: 'register exitoso'})
 }
 
 function getFailSignUp(req,res) {
@@ -185,7 +198,7 @@ function getFailSignUp(req,res) {
 
 
 function postLogin(req,res) {
-    res.redirect('/home.html');
+    res.status(200).json(req.session.passport.user)
 }
 
 

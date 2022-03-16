@@ -2,7 +2,7 @@ import { agregarProductoService, listarProductosService, actualizarProductoServi
 
 export const agregarProducto = async (req, res) => {
     try {
-        await agregarProductoService(req.body);
+        await agregarProductoService(req.body, req.file);
         return res.status(201).json(req.body);
     } catch(error) {
         console.log(error)
@@ -10,8 +10,8 @@ export const agregarProducto = async (req, res) => {
 }
 
 export const listarProductos = (req, res) => {
-    const { id } = req.query;
-    listarProductosService(id ? {"_id":id} : null)
+    const { id } = req.params;
+    listarProductosService(id ? id : null)
     .then(response => {
         return res.status(200).json(response);
     })

@@ -1,14 +1,15 @@
 import { atlasDAO } from "../app.js"
 import { PRODUCTOS_MODEL } from "../DAO/Atlas.js";
 
-export const agregarProductoService = (producto) => {
-    atlasDAO.insert(PRODUCTOS_MODEL,producto);
+export const agregarProductoService = (producto, file) => {
+    const { originalname } = file;
+    atlasDAO.insertProducto(producto, originalname);
 }
 
 export  const listarProductosService = (id=null) => {
-    return atlasDAO.read(PRODUCTOS_MODEL,id)
+    return atlasDAO.read(PRODUCTOS_MODEL,id? {_id:id} : null)
     .then(response => response)
-    .catch(error => console.log(error));S
+    .catch(error => console.log(error));
 }
 
 export const actualizarProductoService = (id, producto) => {

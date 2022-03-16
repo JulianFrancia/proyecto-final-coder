@@ -11,4 +11,8 @@ const ProductosSchema = new mongoose.Schema({
     precio : {type: Number, require: true}
 })
 
+ProductosSchema.methods.setImg = function setImg (filename) {
+    this.imagen = `http://localhost:8080/public/${filename}`;
+}
+
 export const productos = mongoose.model(productosCollection, ProductosSchema);
