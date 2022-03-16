@@ -31,7 +31,7 @@ const upload = multer({dest:'storage/imgs'})
 
 app.use(Express.json());
 app.use(Express.urlencoded({extended: true}));
-app.use('/public',Express.static(`https://proyecto-final-coder-back.herokuapp.com/storage/imgs`));
+app.use('/public',Express.static(`${__dirname}/storage/imgs`));
 app.use(cors());
 const httpServer = createServer(app);
 const io = new Server(httpServer, {cors: {origin: '*'}});
